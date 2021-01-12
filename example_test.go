@@ -1,27 +1,25 @@
-package examples
+package vamos
 
 import (
 	"testing"
 
 	"github.com/stretchr/testify/assert"
-
-	"github.com/lyonssp/vamos"
 )
 
 func TestTrueProp(t *testing.T) {
-	props := vamos.NewProperties(t)
-	props.Add("addition is commutative", func(v *vamos.T) {
+	props := NewProperties(t)
+	props.Add("addition is commutative", func(v *T) {
 		a, b := v.Int(), v.Int()
 		v.AssertEqual(a+b, b+a)
 	})
 	tt := &recordingT{}
 	props.Test(tt)
-	assert.False(t, t.Failed())
+	assert.False(t, tt.failed)
 }
 
 func TestFalseProp(t *testing.T) {
-	props := vamos.NewProperties(t)
-	props.Add("true is not false", func(v *vamos.T) {
+	props := NewProperties(t)
+	props.Add("true is not false", func(v *T) {
 		v.AssertEqual(true, false)
 	})
 	tt := &recordingT{}
