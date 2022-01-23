@@ -2,21 +2,12 @@ package vamos
 
 import (
 	"math/rand"
-	"reflect"
 )
 
 type T struct {
 	t TT
 	*rand.Rand
 	failed bool
-}
-
-func (test *T) AssertEqual(x, y interface{}) {
-	if !reflect.DeepEqual(x, y) {
-		test.failed = true
-		return
-	}
-	return
 }
 
 // supplementary generators
@@ -33,13 +24,19 @@ func (test *T) String() string {
 }
 
 func (test *T) Int() int {
-	n := test.Int63()
-	test.t.Logf("generated int: %d", n)
-	return int(n)
+	i := test.Int63()
+	test.t.Logf("generated int: %d", i)
+	return int(i)
+}
+
+func (test *T) Intn(n int) int {
+	i := test.Int63n(int64(n))
+	test.t.Logf("generated int: %d", i)
+	return int(i)
 }
 
 // testing.T compatibility methods
 
 func (test *T) Errorf(format string, args ...interface{}) {
-	test.t.Errorf(format, args...)
+	test.failed = true
 }
