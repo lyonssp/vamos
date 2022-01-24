@@ -10,13 +10,19 @@ import (
 func TestTrueProp(t *testing.T) {
 	props := NewProperties(t)
 	props.Add("addition is commutative", func(v *T) {
-		a, b := v.Int(), v.Int()
+		a, b := v.IntRange(0, 100), v.IntRange(0, 100)
 		assert.Equal(v, a+b, b+a)
 	})
-	tt := &recordingT{}
-	props.Test(tt)
+	props.Test(t)
+}
 
-	assert.False(t, tt.failed)
+func TestGenString(t *testing.T) {
+	props := NewProperties(t)
+	props.Add("a string is always equal to itself", func(v *T) {
+		s := v.String()
+		assert.Equal(v, s, s)
+	})
+	props.Test(t)
 }
 
 func TestFalseProp(t *testing.T) {
@@ -29,18 +35,6 @@ func TestFalseProp(t *testing.T) {
 	props.Test(tt)
 
 	assert.True(t, tt.failed)
-}
-
-func TestGenString(t *testing.T) {
-	props := NewProperties(t)
-	props.Add("gen string", func(v *T) {
-		s := v.String()
-		assert.Equal(v, s, s)
-	})
-	tt := &recordingT{}
-	props.Test(tt)
-
-	assert.False(t, tt.failed)
 }
 
 type recordingT struct {

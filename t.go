@@ -1,13 +1,16 @@
 package vamos
 
 import (
+	"fmt"
 	"math/rand"
 )
 
+// T serves as a test controller and captures metadata for
+// a single property assessment
 type T struct {
-	t TT
 	*rand.Rand
 	failed bool
+	inputs []interface{}
 }
 
 // supplementary generators
@@ -19,20 +22,30 @@ func (test *T) String() string {
 		test.failed = true
 		return ""
 	}
-	test.t.Logf("generated string: %s", string(bs))
-	return string(bs)
-}
-
-func (test *T) Int() int {
-	i := test.Int63()
-	test.t.Logf("generated int: %d", i)
-	return int(i)
+	s := fmt.Sprintf("%x", bs)
+	test.inputs = append(test.inputs, s)
+	return s
 }
 
 func (test *T) Intn(n int) int {
-	i := test.Int63n(int64(n))
-	test.t.Logf("generated int: %d", i)
-	return int(i)
+	i := test.Rand.Intn(n)
+	test.inputs = append(test.inputs, i)
+	return i
+}
+
+func (test *T) IntRange(a, b int) int {
+	if a >= b {
+		panic(fmt.Sprintf("cannot generate integer in invalid range [%d,%d)", a, b))
+	}
+	i := test.Rand.Intn(b-a) + a
+	test.inputs = append(test.inputs, i)
+	return i
+}
+
+func (test *T) Any(fn func(*rand.Rand) interface{}) interface{} {
+	out := fn(test.Rand)
+	test.inputs = append(test.inputs, out)
+	return out
 }
 
 // testing.T compatibility methods

@@ -6,32 +6,48 @@ import (
 
 // batcher manages a batch of property assessments
 type batcher struct {
-	predicate func(*T)
+	prop property
 
 	// configuration
 	n    int   // number of times to execute
 	seed int64 // seed used for generators
-
-	// state tracked during execution
-	passed int // number of tests runs passed
 }
 
 // execute runs property assessments and returns an
 // indicator whether they failed or succeeded
-func (b *batcher) execute(t TT) bool {
-	test := &T{
-		t:    t,
-		Rand: rand.New(rand.NewSource(b.seed)),
-	}
+func (b *batcher) execute() PropertyReport {
+	rng := rand.New(rand.NewSource(b.seed))
 
 	for i := 0; i < b.n; i++ {
-		b.predicate(test)
+		test := &T{Rand: rng}
+
+		b.prop.predicate(test)
 
 		if test.failed {
-			return false
+			return PropertyReport{
+				propDesc:     b.prop.desc,
+				numPassed:    i,
+				maxChecks:    b.n,
+				failed:       true,
+				failureInput: test.inputs,
+				seed:         b.seed,
+			}
 		}
-		b.passed++
 	}
 
-	return true
+	return PropertyReport{
+		propDesc:  b.prop.desc,
+		numPassed: b.n,
+		maxChecks: b.n,
+		seed:      b.seed,
+	}
+}
+
+type PropertyReport struct {
+	propDesc     string
+	failed       bool
+	numPassed    int
+	maxChecks    int
+	failureInput []interface{}
+	seed         int64
 }
