@@ -45,20 +45,12 @@ func (p *Properties) Add(desc string, fn func(t *T)) {
 }
 
 // Test checks all properties and reports
-// results to the given reporter
-//
-// The builtin *testing.T object can be passed
-// as a reporter for typical testing usage
-func (p *Properties) Test(t TT) {
-	p.Run(defaultReporter{t})
-}
+// results to *testing.T
+func (p *Properties) Test(t *testing.T) {
+	t.Helper()
 
-// Run checks all properties and reports
-// results to the given reporter
-//
-// The builtin *testing.T object can be passed
-// as a reporter for typical testing usage
-func (p *Properties) Run(reporter Reporter) {
+	reporter := testingReporter{t}
+
 	n := 100 // number of times to run a check
 	for _, prop := range p.props {
 		batch := &batcher{
@@ -74,11 +66,12 @@ type Reporter interface {
 	Report(PropertyReport)
 }
 
-type defaultReporter struct {
-	t TT
+type testingReporter struct {
+	t *testing.T
 }
 
-func (dr defaultReporter) Report(report PropertyReport) {
+func (dr testingReporter) Report(report PropertyReport) {
+	dr.t.Helper()
 	if report.failed {
 		dr.t.Errorf(red(strings.Join([]string{
 			"",
@@ -96,12 +89,6 @@ func (dr defaultReporter) Report(report PropertyReport) {
 		fmt.Sprintf("passed:   %d", report.numPassed),
 		fmt.Sprintf("max runs: %d", report.maxChecks),
 	}, "\n")))
-}
-
-// TT is an interface wrapper around testing.T
-type TT interface {
-	Errorf(fmt string, args ...interface{})
-	Logf(fmt string, args ...interface{})
 }
 
 func green(s string) string {

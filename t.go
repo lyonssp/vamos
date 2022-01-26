@@ -1,7 +1,6 @@
 package vamos
 
 import (
-	"fmt"
 	"math/rand"
 )
 
@@ -16,34 +15,37 @@ type T struct {
 // supplementary generators
 
 func (test *T) String() string {
-	var bs []byte
-	_, err := test.Read(bs)
-	if err != nil {
-		test.failed = true
-		return ""
-	}
-	s := fmt.Sprintf("%x", bs)
-	test.inputs = append(test.inputs, s)
-	return s
+	return test.gen(String()).(string)
+}
+
+func (test *T) AlphabeticString() string {
+	return test.gen(AlphabeticString()).(string)
+}
+
+func (test *T) AlphanumericString() string {
+	return test.gen(AlphanumericString()).(string)
+}
+
+func (test *T) Int() int {
+	return test.gen(Int()).(int)
 }
 
 func (test *T) Intn(n int) int {
-	i := test.Rand.Intn(n)
-	test.inputs = append(test.inputs, i)
-	return i
+	return test.gen(Intn(n)).(int)
 }
 
 func (test *T) IntRange(a, b int) int {
-	if a >= b {
-		panic(fmt.Sprintf("cannot generate integer in invalid range [%d,%d)", a, b))
-	}
-	i := test.Rand.Intn(b-a) + a
-	test.inputs = append(test.inputs, i)
-	return i
+	return test.gen(IntRange(a, b)).(int)
 }
 
-func (test *T) Any(fn func(*rand.Rand) interface{}) interface{} {
-	out := fn(test.Rand)
+func (test *T) Any(g Generator) interface{} {
+	return test.gen(g)
+}
+
+// gen uses the given generator to generate data and
+// then records that data to the test input audit trail
+func (test *T) gen(g Generator) interface{} {
+	out := g(test.Rand)
 	test.inputs = append(test.inputs, out)
 	return out
 }

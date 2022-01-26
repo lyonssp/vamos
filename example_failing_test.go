@@ -11,6 +11,11 @@ import (
 
 func TestFailure(t *testing.T) {
 	props := NewProperties(t)
+
+	props.Add("true is false", func(v *T) {
+		assert.True(v, false)
+	})
+
 	props.Add("a mod b never equals 0", func(v *T) {
 		a, b := v.IntRange(1, 10), v.IntRange(1, 10)
 		assert.NotEqual(v, a%b, 0)
