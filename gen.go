@@ -14,6 +14,32 @@ var (
 
 type Generator func(*rand.Rand) interface{}
 
+type GenericGenerator[T any] interface {
+	Generate(r *rand.Rand) T
+	Simplify(T) func() (T, bool)
+}
+
+type intn struct {
+	n int
+}
+
+func (i intn) Generate(r *rand.Rand) int {
+	return r.Intn(i.n)
+}
+
+func (i intn) Simplify(original int) func() (int, bool) {
+	half := original / 2
+
+	return func() (int, bool) {
+		if half == 0 {
+			return 0, false
+		}
+		out := original - half
+		half /= 2
+		return out, true
+	}
+}
+
 func Int() Generator {
 	return func(r *rand.Rand) interface{} {
 		return r.Int()

@@ -3,6 +3,7 @@ package vamos
 import (
 	"flag"
 	"fmt"
+	"math/rand"
 	"strings"
 	"testing"
 	"time"
@@ -30,6 +31,17 @@ func NewProperties(t *testing.T) *Properties {
 	return &Properties{
 		seed: seed,
 	}
+}
+
+type Property struct {
+	Generate func(*rand.Rand) interface{}
+	Simplify func(interface{}) func() (interface{}, bool)
+	Check    func(interface{}) bool
+}
+
+type GenericProperty[T any] struct {
+	Generator GenericGenerator[T]
+	Check    func(T) bool
 }
 
 type property struct {
