@@ -9,11 +9,11 @@ import (
 type T struct {
 	*rand.Rand
 	failed bool
-	inputs []interface{}
 }
 
 // supplementary generators
 
+/*
 func (test *T) String() string {
 	return test.gen(String()).(string)
 }
@@ -38,17 +38,13 @@ func (test *T) IntRange(a, b int) int {
 	return test.gen(IntRange(a, b)).(int)
 }
 
-func (test *T) Any(g Generator) interface{} {
-	return test.gen(g)
-}
-
 // gen uses the given generator to generate data and
 // then records that data to the test input audit trail
-func (test *T) gen(g Generator) interface{} {
+func (test *T) gen(g Generator[O any]) O {
 	out := g(test.Rand)
-	test.inputs = append(test.inputs, out)
 	return out
 }
+*/
 
 // testing.T compatibility methods
 

@@ -2,111 +2,105 @@ package vamos
 
 import (
 	"math"
-	"regexp"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
 )
 
 func TestTrueProp(t *testing.T) {
-	props := NewProperties(t)
-	props.Add("addition is commutative", func(v *T) {
-		a, b := v.IntRange(0, 100), v.IntRange(0, 100)
-		assert.Equal(v, a+b, b+a)
+	Check(t, GenericProperty[Pair[int]]{
+		Generator: PairGenerator(IntRange(0, 100)),
+		Check: func(integers Pair[int]) bool {
+			return integers.Left+integers.Right == integers.Right+integers.Left
+		},
 	})
-	props.Test(t)
 }
 
 func TestInt(t *testing.T) {
-	props := NewProperties(t)
-	props.Add("generated integer is always within the specified bounds", func(v *T) {
-		x := v.Int()
-		assert.True(v, x >= math.MinInt)
-		assert.True(v, x <= math.MaxInt)
+	Check(t, GenericProperty[int]{
+		Generator: Int(),
+		Check: func(x int) bool {
+			return x >= math.MinInt && x <= math.MaxInt
+		},
 	})
-	props.Test(t)
 }
 
 func TestIntn(t *testing.T) {
-	props := NewProperties(t)
-	props.Add("generated integer is always within the specified bounds", func(v *T) {
-		x := v.Intn(100)
-		assert.True(v, x >= 0)
-		assert.True(v, x < 100)
+	Check(t, GenericProperty[int]{
+		Generator: Intn(100),
+		Check: func(x int) bool {
+			return x >= 0 && x <= 100
+		},
 	})
-	props.Test(t)
 }
 
 func TestIntRange(t *testing.T) {
-	props := NewProperties(t)
-
-	props.Add("generated integer is always within the specified range", func(v *T) {
-		x := v.IntRange(-100, 100)
-		assert.True(v, x >= -100)
-		assert.True(v, x < 100)
+	Check(t, GenericProperty[int]{
+		Generator: IntRange(-100, 100),
+		Check: func(x int) bool {
+			return x >= -100 && x <= 100
+		},
 	})
-
-	props.Test(t)
 }
 
 func TestInvalidIntRange(t *testing.T) {
-
 	assert.Panics(t, func() {
-		props := NewProperties(t)
-
-		props.Add("invalid int ranges cause panics", func(v *T) {
-			a := v.Int()               // [0, )
-			b := v.IntRange(-100, a+1) // [-100, a]
-			v.IntRange(a, b)           // invalid range
+		Check(t, GenericProperty[int]{
+			Generator: IntRange(100, -100),
+			Check: func(x int) bool {
+				return true // should not get here
+			},
 		})
-
-		props.Test(t)
 	})
 }
 
 func TestString(t *testing.T) {
-	props := NewProperties(t)
-	props.Add("a string is always equal to itself", func(v *T) {
-		s := v.String()
-		assert.Equal(v, s, s)
+	Check(t, GenericProperty[string]{
+		Generator: String(),
+		Check: func(x string) bool {
+			return x == x
+		},
 	})
-	props.Test(t)
 }
 
 func TestAlphabeticString(t *testing.T) {
-	props := NewProperties(t)
-	props.Add("a generated alphabetic string contains appropriate characters", func(v *T) {
-		s := v.AlphabeticString()
-
-		re := regexp.MustCompile("^[a-zA-Z]*$")
-		assert.True(v, re.MatchString(s))
+	Check(t, GenericProperty[string]{
+		Generator: String(),
+		Check: func(x string) bool {
+			return x == x
+		},
 	})
-	props.Test(t)
 }
 
 func TestAlphanumericString(t *testing.T) {
-	props := NewProperties(t)
-	props.Add("a generated alphanumeric string contains appropriate characters", func(v *T) {
-		s := v.AlphanumericString()
-
-		re := regexp.MustCompile("^[a-zA-Z0-9]*$")
-		assert.True(v, re.MatchString(s))
+	Check(t, GenericProperty[string]{
+		Generator: String(),
+		Check: func(x string) bool {
+			return x == x
+		},
 	})
-	props.Test(t)
 }
 
 func TestChoice(t *testing.T) {
-	props := NewProperties(t)
-
-	props.Add("generated result is always the same in singleton list of choices", func(v *T) {
-		s := v.Any(Choice("foo")).(string)
-		assert.Equal(v, "foo", s)
+	Check(t, GenericProperty[string]{
+		Generator: Choice("foo"),
+		Check: func(s string) bool {
+			return s == "foo"
+		},
 	})
 
-	props.Add("generated result is always in list of choices", func(v *T) {
-		choices := []interface{}{"foo", "bar", "baz"}
-		s := v.Any(Choice(choices...)).(string)
-		assert.Contains(v, choices, s)
+	Check(t, GenericProperty[string]{
+		Generator: Choice("foo", "bar", "baz"),
+		Check: func(s string) bool {
+			contains := func(ls []string, s string) bool {
+				for _, e := range ls {
+					if s == e {
+						return true
+					}
+				}
+				return false
+			}
+			return contains([]string{"foo", "bar", "baz"}, s)
+		},
 	})
-	props.Test(t)
 }
