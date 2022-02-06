@@ -13,14 +13,10 @@ var (
 	colorGreen = "\033[32m"
 )
 
-type GenericProperty[T any] struct {
-	Generator Generator[T]
-	Check     func(T) bool
-}
-
-type property struct {
-	desc      string
-	predicate func(t *T)
+type Property[O any] struct {
+	Description string
+	Generator   Generator[O]
+	Check       func(*V[O])
 }
 
 func green(s string) string {

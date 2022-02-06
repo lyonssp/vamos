@@ -8,99 +8,128 @@ import (
 )
 
 func TestTrueProp(t *testing.T) {
-	Check(t, GenericProperty[Pair[int]]{
-		Generator: PairGenerator(IntRange(0, 100)),
-		Check: func(integers Pair[int]) bool {
-			return integers.Left+integers.Right == integers.Right+integers.Left
+	Check(t, Property[Pair[int]]{
+		"addition is commutative",
+
+		PairGenerator(IntRange(0, 100)),
+
+		func(v *V[Pair[int]]) {
+			input := v.Input
+			assert.Equal(v, input.Left+input.Right, input.Right+input.Left)
 		},
 	})
 }
 
 func TestInt(t *testing.T) {
-	Check(t, GenericProperty[int]{
-		Generator: Int(),
-		Check: func(x int) bool {
-			return x >= math.MinInt && x <= math.MaxInt
+	Check(t, Property[int]{
+		"Int always generates integers within max bounds",
+
+		Int(),
+
+		func(v *V[int]) {
+			x := v.Input
+			assert.GreaterOrEqual(v, x, math.MinInt)
+			assert.LessOrEqual(v, x, math.MaxInt)
 		},
 	})
 }
 
 func TestIntn(t *testing.T) {
-	Check(t, GenericProperty[int]{
-		Generator: Intn(100),
-		Check: func(x int) bool {
-			return x >= 0 && x <= 100
+	Check(t, Property[int]{
+		"Intn always generates integers within bounds",
+
+		Intn(100),
+
+		func(v *V[int]) {
+			x := v.Input
+			assert.GreaterOrEqual(v, x, 0)
+			assert.LessOrEqual(v, x, 100)
 		},
 	})
 }
 
 func TestIntRange(t *testing.T) {
-	Check(t, GenericProperty[int]{
-		Generator: IntRange(-100, 100),
-		Check: func(x int) bool {
-			return x >= -100 && x <= 100
+	Check(t, Property[int]{
+		"IntRange always generates integers within bounds",
+
+		IntRange(-100, 100),
+
+		func(v *V[int]) {
+			x := v.Input
+			assert.GreaterOrEqual(v, x, -100)
+			assert.LessOrEqual(v, x, 100)
 		},
 	})
 }
 
 func TestInvalidIntRange(t *testing.T) {
 	assert.Panics(t, func() {
-		Check(t, GenericProperty[int]{
-			Generator: IntRange(100, -100),
-			Check: func(x int) bool {
-				return true // should not get here
+		Check(t, Property[int]{
+			"bad generator",
+
+			IntRange(100, -100),
+
+			func(v *V[int]) {
+				assert.True(v, true) // should not get here
 			},
 		})
 	})
 }
 
 func TestString(t *testing.T) {
-	Check(t, GenericProperty[string]{
-		Generator: String(),
-		Check: func(x string) bool {
-			return x == x
+	Check(t, Property[string]{
+		"strings always equal themselves",
+
+		String(),
+
+		func(v *V[string]) {
+			assert.Equal(v, v.Input, v.Input)
 		},
 	})
 }
 
 func TestAlphabeticString(t *testing.T) {
-	Check(t, GenericProperty[string]{
-		Generator: String(),
-		Check: func(x string) bool {
-			return x == x
+	Check(t, Property[string]{
+		"alphabetic strings always equal themselves",
+
+		AlphabeticString(),
+
+		func(v *V[string]) {
+			assert.Equal(v, v.Input, v.Input)
 		},
 	})
 }
 
 func TestAlphanumericString(t *testing.T) {
-	Check(t, GenericProperty[string]{
-		Generator: String(),
-		Check: func(x string) bool {
-			return x == x
+	Check(t, Property[string]{
+		"alphabetic strings always equal themselves",
+
+		AlphanumericString(),
+
+		func(v *V[string]) {
+			assert.Equal(v, v.Input, v.Input)
 		},
 	})
 }
 
 func TestChoice(t *testing.T) {
-	Check(t, GenericProperty[string]{
-		Generator: Choice("foo"),
-		Check: func(s string) bool {
-			return s == "foo"
+	Check(t, Property[string]{
+		"choosing from one options always generates that option",
+
+		Choice("foo"),
+
+		func(v *V[string]) {
+			assert.Equal(v, v.Input, "foo")
 		},
 	})
 
-	Check(t, GenericProperty[string]{
-		Generator: Choice("foo", "bar", "baz"),
-		Check: func(s string) bool {
-			contains := func(ls []string, s string) bool {
-				for _, e := range ls {
-					if s == e {
-						return true
-					}
-				}
-				return false
-			}
-			return contains([]string{"foo", "bar", "baz"}, s)
+	Check(t, Property[string]{
+		"choosing from a list of options always generates one of the options",
+
+		Choice("foo", "bar", "baz"),
+
+		func(v *V[string]) {
+			assert.Contains(v, []string{"foo", "bar", "baz"}, v.Input)
 		},
 	})
 }

@@ -4,47 +4,64 @@
 package vamos
 
 import (
+	"github.com/stretchr/testify/assert"
 	"math/rand"
 	"testing"
 )
 
 func TestFailureCheck(t *testing.T) {
-	Check(t, GenericProperty[bool]{
-		Generator: Choice(true, false),
-		Check: func(b bool) bool {
-			return b
+	Check(t, Property[bool]{
+		"all booleans are true",
+
+		Choice(true, false),
+
+		func(v *V[bool]) {
+			assert.True(v, v.Input)
 		},
 	})
 }
 
 func TestStringCheck(t *testing.T) {
-	Check(t, GenericProperty[string]{
-		Generator: String(),
-		Check: func(s string) bool {
-			return len(s) <= 2
+	Check(t, Property[string]{
+		"strings are at most 2 characters long",
+
+		String(),
+
+		func(v *V[string]) {
+			assert.True(v, len(v.Input) <= 2)
 		},
 	})
 }
 
 func TestPairCheck(t *testing.T) {
-	Check(t, GenericProperty[Pair[int]]{
-		Generator: PairGenerator(IntRange(0, 100)),
-		Check: func(p Pair[int]) bool {
-			return p.Left < p.Right
+	Check(t, Property[Pair[int]]{
+		"Pair[int].Left < Pair[int].Right",
+
+		PairGenerator(IntRange(0, 100)),
+
+		func(v *V[Pair[int]]) {
+			p := v.Input
+			assert.Less(v, p.Left, p.Right)
 		},
 	})
 
-	Check(t, GenericProperty[Pair[int]]{
-		Generator: PairGenerator(IntRange(0, 100)),
-		Check: func(p Pair[int]) bool {
-			return p.Left >= p.Right
+	Check(t, Property[Pair[int]]{
+		"Pair[int].Left >= Pair[int].Right",
+
+		PairGenerator(IntRange(0, 100)),
+
+		func(v *V[Pair[int]]) {
+			assert.GreaterOrEqual(v, v.Input.Left, v.Input.Right)
 		},
 	})
 
-	Check(t, GenericProperty[Pair[string]]{
-		Generator: PairGenerator(String()),
-		Check: func(p Pair[string]) bool {
-			return len(p.Left) < len(p.Right)
+	Check(t, Property[Pair[string]]{
+		"strings are all the same length",
+
+		PairGenerator(String()),
+
+		func(v *V[Pair[string]]) {
+			assert.Equal(v, len(v.Input.Left), len(v.Input.Right))
 		},
 	})
 }

@@ -84,7 +84,7 @@ func (s str) Simplify(original string) func() (string, bool) {
 	return simplifyString(original, s.charset)
 }
 
-// shrink string size by reducing the length 
+// shrink string size by reducing the length
 // of the input string by factors of two
 func shrinkSize(original, charset string) func() (string, bool) {
 	next := simplifyInt(0, len(original))
@@ -231,7 +231,7 @@ func simplifyInt(base, x int) func() (int, bool) {
 		if x == base {
 			exhausted = true
 		}
-		x = base + (x - base) / 2
+		x = base + (x-base)/2
 		return x, true
 	}
 }

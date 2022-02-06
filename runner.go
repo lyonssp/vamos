@@ -9,33 +9,42 @@ import (
 	"time"
 )
 
-func Check[O any](t *testing.T, p GenericProperty[O]) {
+func Check[O any](t *testing.T, p Property[O]) {
 	t.Helper()
-	reporter[O]{t}.report(check(p))
+
+	r := reporter[O]{t}
+
+	r.report(check(t, p))
 }
 
-func check[O any](p GenericProperty[O]) report[O] {
+func check[O any](t *testing.T, p Property[O]) report[O] {
 	n := 100 // number of runs
+
 	rng := rand.New(rand.NewSource(time.Now().UnixNano()))
 
 	for i := 0; i < n; i++ {
 		_testcase := p.Generator.Generate(rng)
 
-		if !p.Check(_testcase) {
+		v := &V[O]{
+			rng:   rng,
+			Input: _testcase,
+		}
+
+		p.Check(v)
+		if v.failed {
 			return report[O]{
-				propDesc:   "placeholder",
+				propDesc:   p.Description,
 				failed:     true,
 				testcase:   _testcase,
-				simplified: simplify(_testcase, p),
+				simplified: simplify(v, _testcase, p),
 				numPassed:  i,
 				maxChecks:  100,
 			}
 		}
-
 	}
 
 	return report[O]{
-		propDesc:  "placeholder",
+		propDesc:  p.Description,
 		failed:    false,
 		numPassed: n,
 		maxChecks: 100,
@@ -45,7 +54,7 @@ func check[O any](p GenericProperty[O]) report[O] {
 // BFS against tree resulting from shrinks, but
 // short-circuit along any path when the simplified
 // test case does not fail
-func simplify[O any](testcase O, prop GenericProperty[O]) O {
+func simplify[O any](v *V[O], testcase O, prop Property[O]) O {
 	ls := list.New()
 	ls.PushBack(testcase)
 
@@ -58,7 +67,12 @@ func simplify[O any](testcase O, prop GenericProperty[O]) O {
 			if !ok {
 				break
 			}
-			if !prop.Check(next) {
+			_v := &V[O]{
+				rng:   v.rng,
+				Input: next,
+			}
+			prop.Check(_v)
+			if _v.failed {
 				ls.PushBack(next)
 				break
 			}
