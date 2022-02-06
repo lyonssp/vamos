@@ -1,3 +1,4 @@
+//go:build fail
 // +build fail
 
 package vamos
@@ -5,29 +6,47 @@ package vamos
 import (
 	"math/rand"
 	"testing"
-
-	"github.com/stretchr/testify/assert"
 )
 
-func TestFailure(t *testing.T) {
-	props := NewProperties(t)
+func TestFailureCheck(t *testing.T) {
+	Check(t, GenericProperty[bool]{
+		Generator: Choice(true, false),
+		Check: func(b bool) bool {
+			return b
+		},
+	})
+}
 
-	props.Add("true is false", func(v *T) {
-		assert.True(v, false)
+func TestStringCheck(t *testing.T) {
+	Check(t, GenericProperty[string]{
+		Generator: String(),
+		Check: func(s string) bool {
+			return len(s) <= 2
+		},
+	})
+}
+
+func TestPairCheck(t *testing.T) {
+	Check(t, GenericProperty[Pair[int]]{
+		Generator: PairGenerator(IntRange(0, 100)),
+		Check: func(p Pair[int]) bool {
+			return p.Left < p.Right
+		},
 	})
 
-	props.Add("a mod b never equals 0", func(v *T) {
-		a, b := v.IntRange(1, 10), v.IntRange(1, 10)
-		assert.NotEqual(v, a%b, 0)
+	Check(t, GenericProperty[Pair[int]]{
+		Generator: PairGenerator(IntRange(0, 100)),
+		Check: func(p Pair[int]) bool {
+			return p.Left >= p.Right
+		},
 	})
 
-	props.Add("no two people are the same", func(v *T) {
-		x := v.Any(genPerson).(person)
-		y := v.Any(genPerson).(person)
-		assert.NotEqual(v, x, y)
+	Check(t, GenericProperty[Pair[string]]{
+		Generator: PairGenerator(String()),
+		Check: func(p Pair[string]) bool {
+			return len(p.Left) < len(p.Right)
+		},
 	})
-
-	props.Test(t)
 }
 
 type person struct {
@@ -38,8 +57,8 @@ type person struct {
 
 func genPerson(rng *rand.Rand) interface{} {
 	return person{
-		firstName:  Choice("Bob", "Chris", "Sean")(rng).(string),
-		middleName: Choice("Patrick", "Mary", "Louie")(rng).(string),
-		homeState:  Choice("Virginia", "Texas", "New York")(rng).(string),
+		firstName:  Choice("Bob", "Chris", "Sean").Generate(rng),
+		middleName: Choice("Patrick", "Mary", "Louie").Generate(rng),
+		homeState:  Choice("Virginia", "Texas", "New York").Generate(rng),
 	}
 }

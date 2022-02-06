@@ -14,14 +14,19 @@ jobs:
       with:
         go-version: '1.17.6'
 
-    - name: Build
-      run: go build .
+    - name: Install go1.18beta
+      run: |
+        go install golang.org/dl/go1.18beta1@latest
+        go1.18beta1 download
 
     - name: Build
-      run: go test .
+      run: go1.18beta1 build .
+
+    - name: Build
+      run: go1.18beta1 test .
 
     - name: Test With Coverage
-      run: go test . -coverprofile coverage.txt -covermode atomic -tags fail || true # mask process failure -- running intentional failing tests
+      run: go1.18beta1 test . -coverprofile coverage.txt -covermode atomic -tags fail || true # mask process failure -- running intentional failing tests
 
     - name: Upload coverage to Codecov
       uses: codecov/codecov-action@v2
