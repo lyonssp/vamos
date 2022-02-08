@@ -15,8 +15,8 @@ func TestFailureCheck(t *testing.T) {
 
 		Choice(true, false),
 
-		func(v *V[bool]) {
-			assert.True(v, v.Input)
+		func(v *V, b bool) {
+			assert.True(v, b)
 		},
 	})
 }
@@ -27,8 +27,8 @@ func TestStringCheck(t *testing.T) {
 
 		String(),
 
-		func(v *V[string]) {
-			assert.True(v, len(v.Input) <= 2)
+		func(v *V, s string) {
+			assert.True(v, len(s) <= 2)
 		},
 	})
 }
@@ -39,8 +39,7 @@ func TestPairCheck(t *testing.T) {
 
 		PairGenerator(IntRange(0, 100)),
 
-		func(v *V[Pair[int]]) {
-			p := v.Input
+		func(v *V, p Pair[int]) {
 			assert.Less(v, p.Left, p.Right)
 		},
 	})
@@ -50,8 +49,8 @@ func TestPairCheck(t *testing.T) {
 
 		PairGenerator(IntRange(0, 100)),
 
-		func(v *V[Pair[int]]) {
-			assert.GreaterOrEqual(v, v.Input.Left, v.Input.Right)
+		func(v *V, p Pair[int]) {
+			assert.GreaterOrEqual(v, p.Left, p.Right)
 		},
 	})
 
@@ -60,8 +59,8 @@ func TestPairCheck(t *testing.T) {
 
 		PairGenerator(String()),
 
-		func(v *V[Pair[string]]) {
-			assert.Equal(v, len(v.Input.Left), len(v.Input.Right))
+		func(v *V, p Pair[string]) {
+			assert.Equal(v, len(p.Left), len(p.Right))
 		},
 	})
 }

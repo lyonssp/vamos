@@ -33,6 +33,9 @@ func IntRange(a, b int) Generator[int] {
 	return intRange{a, b}
 }
 
+// intRange generates an integer in the range [min, max]
+//
+// values simplify towards the lower bound of the range
 type intRange struct {
 	min int
 	max int
@@ -67,26 +70,25 @@ func String() Generator[string] {
 // values simplify towards shorter strings and invdividual
 // characters simplify toward the front of the character set string
 type str struct {
-	charset string
-	length  int
+	alphabet string
+	length   int
 }
 
 func (s str) Generate(r *rand.Rand) string {
 	length := r.Intn(s.length) // [1,n) characters
 	out := make([]byte, length)
 	for i := 0; i < len(out); i++ {
-		out[i] = s.charset[r.Intn(len(s.charset))]
+		out[i] = s.alphabet[r.Intn(len(s.alphabet))]
 	}
 	return string(out)
 }
 
 func (s str) Simplify(original string) func() (string, bool) {
-	return simplifyString(original, s.charset)
+	return simplifyString(original, s.alphabet)
 }
 
-// shrink string size by reducing the length
-// of the input string by factors of two
-func shrinkSize(original, charset string) func() (string, bool) {
+// shrinkSize simplifies strings by reducing their length
+func shrinkSize(original string) func() (string, bool) {
 	next := simplifyInt(0, len(original))
 	return func() (string, bool) {
 		i, ok := next()
@@ -100,8 +102,9 @@ func shrinkSize(original, charset string) func() (string, bool) {
 	}
 }
 
-// shrink characters in string starting with the first character in the string
-func shrinkCharacters(original, charset string) func() (string, bool) {
+// shrinkCharacters simplifies strings by simplifying the characters
+// in the string according to the given alphabetical order
+func shrinkCharacters(original, alphabet string) func() (string, bool) {
 	if len(original) <= 1 {
 		return noopSimplifier[string]
 	}
@@ -109,7 +112,7 @@ func shrinkCharacters(original, charset string) func() (string, bool) {
 	at := 0
 	return func() (string, bool) {
 		for i := at; i < len(original); i++ {
-			str, ok := simplifyCharAt(at, original, charset)()
+			str, ok := simplifyCharAt(at, original, alphabet)()
 			if !ok {
 				at++
 				continue
@@ -236,19 +239,19 @@ func simplifyInt(base, x int) func() (int, bool) {
 	}
 }
 
-func simplifyString(original, charset string) func() (string, bool) {
+func simplifyString(original, alphabet string) func() (string, bool) {
 	return concat(
-		shrinkSize(original, charset),
-		shrinkCharacters(original, charset),
+		shrinkSize(original),
+		shrinkCharacters(original, alphabet),
 	).next
 }
 
-func simplifyCharAt(at int, str, charset string) func() (string, bool) {
+func simplifyCharAt(at int, str, alphabet string) func() (string, bool) {
 	if at < 0 || at >= len(str) {
 		return noopSimplifier[string]
 	}
 
-	pos := findChar(charset, str[at])
+	pos := findChar(alphabet, str[at])
 	next := simplifyInt(0, pos)
 	return func() (string, bool) {
 		i, ok := next()
@@ -258,7 +261,7 @@ func simplifyCharAt(at int, str, charset string) func() (string, bool) {
 
 		out := make([]byte, len(str))
 		copy(out[:at], str[:at])
-		out[at] = charset[i]
+		out[at] = alphabet[i]
 		copy(out[at+1:], str[at+1:])
 
 		return string(out), true

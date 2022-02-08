@@ -13,9 +13,8 @@ func TestTrueProp(t *testing.T) {
 
 		PairGenerator(IntRange(0, 100)),
 
-		func(v *V[Pair[int]]) {
-			input := v.Input
-			assert.Equal(v, input.Left+input.Right, input.Right+input.Left)
+		func(v *V, p Pair[int]) {
+			assert.Equal(v, p.Left+p.Right, p.Right+p.Left)
 		},
 	})
 }
@@ -26,8 +25,7 @@ func TestInt(t *testing.T) {
 
 		Int(),
 
-		func(v *V[int]) {
-			x := v.Input
+		func(v *V, x int) {
 			assert.GreaterOrEqual(v, x, math.MinInt)
 			assert.LessOrEqual(v, x, math.MaxInt)
 		},
@@ -40,8 +38,7 @@ func TestIntn(t *testing.T) {
 
 		Intn(100),
 
-		func(v *V[int]) {
-			x := v.Input
+		func(v *V, x int) {
 			assert.GreaterOrEqual(v, x, 0)
 			assert.LessOrEqual(v, x, 100)
 		},
@@ -54,8 +51,7 @@ func TestIntRange(t *testing.T) {
 
 		IntRange(-100, 100),
 
-		func(v *V[int]) {
-			x := v.Input
+		func(v *V, x int) {
 			assert.GreaterOrEqual(v, x, -100)
 			assert.LessOrEqual(v, x, 100)
 		},
@@ -69,7 +65,7 @@ func TestInvalidIntRange(t *testing.T) {
 
 			IntRange(100, -100),
 
-			func(v *V[int]) {
+			func(v *V, _ int) {
 				assert.True(v, true) // should not get here
 			},
 		})
@@ -82,8 +78,8 @@ func TestString(t *testing.T) {
 
 		String(),
 
-		func(v *V[string]) {
-			assert.Equal(v, v.Input, v.Input)
+		func(v *V, s string) {
+			assert.Equal(v, s, s)
 		},
 	})
 }
@@ -94,8 +90,8 @@ func TestAlphabeticString(t *testing.T) {
 
 		AlphabeticString(),
 
-		func(v *V[string]) {
-			assert.Equal(v, v.Input, v.Input)
+		func(v *V, s string) {
+			assert.Equal(v, s, s)
 		},
 	})
 }
@@ -106,8 +102,8 @@ func TestAlphanumericString(t *testing.T) {
 
 		AlphanumericString(),
 
-		func(v *V[string]) {
-			assert.Equal(v, v.Input, v.Input)
+		func(v *V, s string) {
+			assert.Equal(v, s, s)
 		},
 	})
 }
@@ -118,8 +114,8 @@ func TestChoice(t *testing.T) {
 
 		Choice("foo"),
 
-		func(v *V[string]) {
-			assert.Equal(v, v.Input, "foo")
+		func(v *V, s string) {
+			assert.Equal(v, s, "foo")
 		},
 	})
 
@@ -128,8 +124,8 @@ func TestChoice(t *testing.T) {
 
 		Choice("foo", "bar", "baz"),
 
-		func(v *V[string]) {
-			assert.Contains(v, []string{"foo", "bar", "baz"}, v.Input)
+		func(v *V, s string) {
+			assert.Contains(v, []string{"foo", "bar", "baz"}, s)
 		},
 	})
 }

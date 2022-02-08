@@ -2,12 +2,21 @@ package vamos
 
 import (
 	"container/list"
-	"fmt"
+	"flag"
 	"math/rand"
-	"strings"
 	"testing"
 	"time"
 )
+
+var (
+	seedFlag = flag.Int64("vamos.seed", 0, "seed to use to reproduce observed behaviors")
+)
+
+type Property[O any] struct {
+	Description string
+	Generator   Generator[O]
+	Check       func(*V, O)
+}
 
 func Check[O any](t *testing.T, p Property[O]) {
 	t.Helper()
@@ -24,13 +33,9 @@ func check[O any](t *testing.T, p Property[O]) report[O] {
 
 	for i := 0; i < n; i++ {
 		_testcase := p.Generator.Generate(rng)
+		v := &V{rng: rng}
+		p.Check(v, _testcase)
 
-		v := &V[O]{
-			rng:   rng,
-			Input: _testcase,
-		}
-
-		p.Check(v)
 		if v.failed {
 			return report[O]{
 				propDesc:   p.Description,
@@ -54,7 +59,7 @@ func check[O any](t *testing.T, p Property[O]) report[O] {
 // BFS against tree resulting from shrinks, but
 // short-circuit along any path when the simplified
 // test case does not fail
-func simplify[O any](v *V[O], testcase O, prop Property[O]) O {
+func simplify[O any](v *V, testcase O, prop Property[O]) O {
 	ls := list.New()
 	ls.PushBack(testcase)
 
@@ -67,11 +72,10 @@ func simplify[O any](v *V[O], testcase O, prop Property[O]) O {
 			if !ok {
 				break
 			}
-			_v := &V[O]{
-				rng:   v.rng,
-				Input: next,
-			}
-			prop.Check(_v)
+
+			_v := &V{rng: v.rng}
+			prop.Check(_v, next)
+
 			if _v.failed {
 				ls.PushBack(next)
 				break
@@ -80,37 +84,4 @@ func simplify[O any](v *V[O], testcase O, prop Property[O]) O {
 	}
 
 	return simplest
-}
-
-type report[O any] struct {
-	propDesc   string
-	failed     bool
-	testcase   O
-	simplified O
-	numPassed  int
-	maxChecks  int
-}
-
-type reporter[O any] struct{ t *testing.T }
-
-func (r reporter[O]) report(in report[O]) {
-	r.t.Helper()
-	if in.failed {
-		r.t.Errorf(red(strings.Join([]string{
-			"",
-			fmt.Sprintf("property: %s", in.propDesc),
-			fmt.Sprintf("test case:   %v", in.testcase),
-			fmt.Sprintf("simplified:   %v", in.simplified),
-			fmt.Sprintf("passed:   %d", in.numPassed),
-			fmt.Sprintf("max runs: %d", in.maxChecks),
-		}, "\n")))
-		return
-	}
-
-	r.t.Logf(green(strings.Join([]string{
-		"",
-		fmt.Sprintf("property: %s", in.propDesc),
-		fmt.Sprintf("passed:   %d", in.numPassed),
-		fmt.Sprintf("max runs: %d", in.maxChecks),
-	}, "\n")))
 }
